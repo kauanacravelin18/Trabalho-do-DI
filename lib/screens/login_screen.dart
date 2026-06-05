@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../providers/auth_provider.dart';
 import '../routes/app_routes.dart';
 
@@ -12,200 +11,290 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final emailController = TextEditingController();
-  final senhaController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _senhaController = TextEditingController();
+  bool _verSenha = false;
+  bool _carregando = false;
 
-  bool carregando = false;
+  static const Color amarelo = Color(0xFFFFC107);
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _senhaController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _login() async {
+    if (_emailController.text.isEmpty || _senhaController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Preencha todos os campos'),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _carregando = true);
+
+    final ok = await context.read<AuthProvider>().login(
+      _emailController.text.trim(),
+      _senhaController.text.trim(),
+    );
+
+    if (!mounted) return;
+    setState(() => _carregando = false);
+
+    if (ok) {
+      Navigator.pushReplacementNamed(context, AppRoutes.home);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('E-mail ou senha inválidos'),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.black,
       body: SingleChildScrollView(
         child: Column(
           children: [
-            /// TOPO PRETO
+            // ── TOPO PRETO — logo centralizada com bastante espaço ──
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 60),
-              decoration: const BoxDecoration(color: Colors.black),
-              child: const Column(
+              color: Colors.black,
+              padding: const EdgeInsets.fromLTRB(24, 90, 24, 60),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.construction, size: 80, color: Color(0xFFFFB300)),
-                  SizedBox(height: 10),
-                  Text(
-                    'OBRA TECH',
-                    style: TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                  // Ícone capacete
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: amarelo,
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: const Icon(
+                      Icons.construction_rounded,
+                      color: Colors.black,
+                      size: 44,
                     ),
                   ),
-                  SizedBox(height: 5),
-                  Text(
+
+                  const SizedBox(height: 20),
+
+                  // OBRA TECH
+                  RichText(
+                    text: const TextSpan(
+                      children: [
+                        TextSpan(
+                          text: 'OBRA ',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 32,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 3,
+                          ),
+                        ),
+                        TextSpan(
+                          text: 'TECH',
+                          style: TextStyle(
+                            color: Color(0xFFFFC107),
+                            fontSize: 32,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  const Text(
                     'Monitoramento inteligente da sua obra',
-                    style: TextStyle(color: Colors.white70),
+                    style: TextStyle(color: Colors.white54, fontSize: 13),
                   ),
                 ],
               ),
             ),
 
-            /// CONTEÚDO
-            Padding(
-              padding: const EdgeInsets.all(24),
+            // ── PARTE BRANCA — formulário ──
+            Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              padding: const EdgeInsets.fromLTRB(24, 32, 24, 40),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Bem-vindo!',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  const Text(
+                    'Bem-vindo!',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-
-                  const SizedBox(height: 5),
-
-                  const Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Faça login para continuar',
-                      style: TextStyle(color: Colors.grey),
-                    ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Faça login para continuar',
+                    style: TextStyle(color: Colors.black54, fontSize: 14),
                   ),
 
-                  const SizedBox(height: 25),
+                  const SizedBox(height: 28),
 
+                  // Campo e-mail
                   TextField(
-                    controller: emailController,
+                    controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
+                    style: const TextStyle(color: Colors.black),
                     decoration: InputDecoration(
                       hintText: 'Email',
-                      prefixIcon: const Icon(Icons.email),
+                      hintStyle: const TextStyle(color: Colors.black38),
+                      prefixIcon: const Icon(
+                        Icons.email_outlined,
+                        color: Colors.black45,
+                      ),
+                      filled: true,
+                      fillColor: Colors.grey.shade100,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: amarelo, width: 2),
                       ),
                     ),
                   ),
 
-                  const SizedBox(height: 15),
+                  const SizedBox(height: 16),
 
+                  // Campo senha
                   TextField(
-                    controller: senhaController,
-                    obscureText: true,
+                    controller: _senhaController,
+                    obscureText: !_verSenha,
+                    style: const TextStyle(color: Colors.black),
                     decoration: InputDecoration(
                       hintText: 'Senha',
-                      prefixIcon: const Icon(Icons.lock),
+                      hintStyle: const TextStyle(color: Colors.black38),
+                      prefixIcon: const Icon(
+                        Icons.lock_outline_rounded,
+                        color: Colors.black45,
+                      ),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _verSenha
+                              ? Icons.visibility_off_rounded
+                              : Icons.visibility_rounded,
+                          color: Colors.black38,
+                        ),
+                        onPressed: () => setState(() => _verSenha = !_verSenha),
+                      ),
+                      filled: true,
+                      fillColor: Colors.grey.shade100,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: amarelo, width: 2),
                       ),
                     ),
                   ),
 
-                  const SizedBox(height: 10),
-
+                  // Esqueceu a senha
                   Align(
                     alignment: Alignment.center,
                     child: TextButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, AppRoutes.resetSenha);
-                      },
+                      onPressed: () =>
+                          Navigator.pushNamed(context, AppRoutes.resetSenha),
                       child: const Text(
                         'Esqueceu sua senha?',
-                        style: TextStyle(color: Color(0xFFFFB300)),
+                        style: TextStyle(
+                          color: amarelo,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 4),
 
+                  // Botão entrar
                   SizedBox(
                     width: double.infinity,
-                    height: 50,
+                    height: 52,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFFB300),
+                        backgroundColor: amarelo,
+                        foregroundColor: Colors.black,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(12),
                         ),
+                        elevation: 0,
                       ),
-                      onPressed: carregando
-                          ? null
-                          : () async {
-                              if (emailController.text.isEmpty ||
-                                  senhaController.text.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Preencha todos os campos'),
-                                  ),
-                                );
-                                return;
-                              }
-
-                              setState(() {
-                                carregando = true;
-                              });
-
-                              final auth = context.read<AuthProvider>();
-
-                              bool ok = await auth.login(
-                                emailController.text.trim(),
-                                senhaController.text.trim(),
-                              );
-
-                              if (!mounted) return;
-
-                              setState(() {
-                                carregando = false;
-                              });
-
-                              if (ok) {
-                                Navigator.pushReplacementNamed(
-                                  context,
-                                  AppRoutes.home,
-                                );
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Email ou senha inválidos'),
-                                  ),
-                                );
-                              }
-                            },
-                      child: carregando
-                          ? const CircularProgressIndicator(color: Colors.black)
+                      onPressed: _carregando ? null : _login,
+                      child: _carregando
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                color: Colors.black,
+                                strokeWidth: 2.5,
+                              ),
+                            )
                           : const Text(
                               'Entrar',
                               style: TextStyle(
-                                color: Colors.black,
                                 fontWeight: FontWeight.bold,
+                                fontSize: 16,
                               ),
                             ),
                     ),
                   ),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
 
+                  // Botão criar conta
                   SizedBox(
                     width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey.shade200,
+                    height: 52,
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.black87,
+                        side: BorderSide(color: Colors.grey.shade300),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      onPressed: () {
-                        Navigator.pushNamed(context, AppRoutes.register);
-                      },
+                      onPressed: () =>
+                          Navigator.pushNamed(context, AppRoutes.register),
                       child: const Text(
-                        'Cadastrar',
+                        'Criar conta',
                         style: TextStyle(
-                          color: Colors.black,
                           fontWeight: FontWeight.bold,
+                          fontSize: 16,
                         ),
                       ),
                     ),
