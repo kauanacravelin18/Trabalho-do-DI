@@ -65,9 +65,18 @@ class ObraTechApp extends StatelessWidget {
           snackBarTheme: const SnackBarThemeData(
             behavior: SnackBarBehavior.floating,
           ),
+          bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+            backgroundColor: Colors.black,
+            selectedItemColor: Color(0xFFFFC107),
+            unselectedItemColor: Colors.white38,
+            type: BottomNavigationBarType.fixed,
+            selectedLabelStyle: TextStyle(fontSize: 10),
+            unselectedLabelStyle: TextStyle(fontSize: 10),
+          ),
         ),
         initialRoute: AppRoutes.login,
         routes: AppRoutes.routes,
+        onGenerateRoute: AppRoutes.generateRoute,
       ),
     );
   }

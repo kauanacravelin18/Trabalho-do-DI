@@ -13,10 +13,10 @@ class Obra {
 
   factory Obra.fromMap(Map<String, dynamic> map) {
     return Obra(
-      id: map['id'],
-      nome: map['nome'],
-      endereco: map['endereco'],
-      responsavel: map['responsavel'],
+      id: map['id'].toString(),
+      nome: map['nome'] ?? '',
+      endereco: map['endereco'] ?? '',
+      responsavel: map['responsavel'] ?? '',
     );
   }
 
@@ -27,5 +27,18 @@ class Obra {
       'endereco': endereco,
       'responsavel': responsavel,
     };
+  }
+
+  Obra copyWith({
+    String? nome,
+    String? endereco,
+    String? responsavel,
+  }) {
+    return Obra(
+      id: id,
+      nome: nome ?? this.nome,
+      endereco: endereco ?? this.endereco,
+      responsavel: responsavel ?? this.responsavel,
+    );
   }
 }

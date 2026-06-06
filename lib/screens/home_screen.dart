@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/obra_provider.dart';
+import '../providers/funcionario_provider.dart';
+import '../providers/alerta_provider.dart';
 import '../routes/app_routes.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -23,6 +25,8 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ObraProvider>().carregarObras();
+      context.read<FuncionarioProvider>().carregarFuncionarios();
+      context.read<AlertaProvider>().carregarAlertas();
     });
   }
 
@@ -34,9 +38,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final List<Widget> telas = [
       _buildDashboard(nome, obraAtual),
-      _buildObrasTab(context),
+      _buildObrasTab(),
       _buildSensoresTab(),
       _buildAlertasTab(),
+      _buildFuncionariosTab(),
       _buildPerfilTab(context, nome),
     ];
 
@@ -47,81 +52,69 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ─────────────────── BOTTOM NAV ───────────────────
+  // ── BOTTOM NAV (6 itens) ──
   Widget _buildBottomNav() {
     return BottomNavigationBar(
       currentIndex: _currentIndex,
       onTap: (i) => setState(() => _currentIndex = i),
       backgroundColor: Colors.black,
       selectedItemColor: amarelo,
-      unselectedItemColor: Colors.white54,
+      unselectedItemColor: Colors.white38,
       type: BottomNavigationBarType.fixed,
-      selectedFontSize: 11,
-      unselectedFontSize: 11,
+      selectedFontSize: 10,
+      unselectedFontSize: 10,
       items: const [
         BottomNavigationBarItem(
-          icon: Icon(Icons.home_rounded),
-          label: 'Início',
-        ),
+            icon: Icon(Icons.home_rounded), label: 'Início'),
         BottomNavigationBarItem(
-          icon: Icon(Icons.domain_rounded),
-          label: 'Obras',
-        ),
+            icon: Icon(Icons.domain_rounded), label: 'Obras'),
         BottomNavigationBarItem(
-          icon: Icon(Icons.sensors_rounded),
-          label: 'Sensores',
-        ),
+            icon: Icon(Icons.sensors_rounded), label: 'Sensores'),
         BottomNavigationBarItem(
-          icon: Icon(Icons.notifications_rounded),
-          label: 'Alertas',
-        ),
+            icon: Icon(Icons.notifications_rounded), label: 'Alertas'),
         BottomNavigationBarItem(
-          icon: Icon(Icons.person_rounded),
-          label: 'Perfil',
-        ),
+            icon: Icon(Icons.people_rounded), label: 'Funcionários'),
+        BottomNavigationBarItem(
+            icon: Icon(Icons.person_rounded), label: 'Perfil'),
       ],
     );
   }
 
-  // ─────────────────── DASHBOARD ───────────────────
+  // ──────────────── DASHBOARD ────────────────
   Widget _buildDashboard(String nome, dynamic obraAtual) {
+    final alertas = context.watch<AlertaProvider>().alertas;
+    final funcionarios = context.watch<FuncionarioProvider>().funcionarios;
+
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Icon(Icons.menu_rounded, color: Colors.white),
-                const Text(
-                  'Dashboard',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                const Text('Dashboard',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold)),
                 Stack(
                   children: [
-                    const Icon(
-                      Icons.notifications_outlined,
-                      color: Colors.white,
-                    ),
-                    Positioned(
-                      right: 0,
-                      top: 0,
-                      child: Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
+                    const Icon(Icons.notifications_outlined,
+                        color: Colors.white),
+                    if (alertas.isNotEmpty)
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                              color: Colors.red, shape: BoxShape.circle),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ],
@@ -129,139 +122,211 @@ class _HomeScreenState extends State<HomeScreen> {
 
             const SizedBox(height: 20),
 
-            // Saudação
             RichText(
-              text: TextSpan(
-                children: [
-                  TextSpan(
-                    text: 'Olá, ${nome.toUpperCase()}!\n',
-                    style: const TextStyle(
+              text: TextSpan(children: [
+                TextSpan(
+                  text: 'Olá, ${nome.toUpperCase()}!\n',
+                  style: const TextStyle(
                       color: amarelo,
                       fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.bold),
+                ),
+                const TextSpan(
+                  text: 'Aqui está o resumo da sua obra.',
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+              ]),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Card obra clicável
+            GestureDetector(
+              onTap: obraAtual != null
+                  ? () => Navigator.pushNamed(
+                        context,
+                        AppRoutes.detalheObra,
+                        arguments: obraAtual.id,
+                      )
+                  : null,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                    color: amarelo, borderRadius: BorderRadius.circular(14)),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.apartment_rounded,
+                          color: Colors.black, size: 28),
                     ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Obra Atual',
+                              style: TextStyle(
+                                  color: Colors.black54, fontSize: 12)),
+                          Text(
+                            obraAtual != null
+                                ? obraAtual.nome
+                                : 'Nenhuma obra cadastrada',
+                            style: const TextStyle(
+                                color: Colors.black,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold),
+                          ),
+                          if (obraAtual != null)
+                            Text(obraAtual.endereco,
+                                style: const TextStyle(
+                                    color: Colors.black87, fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.chevron_right_rounded,
+                        color: Colors.black54),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 22),
+
+            // Stats rápidos
+            Row(
+              children: [
+                Expanded(
+                    child: _statQuick('Funcionários',
+                        '${funcionarios.length}', Icons.people_rounded)),
+                const SizedBox(width: 10),
+                Expanded(
+                    child: _statQuick(
+                        'Alertas',
+                        '${alertas.length}',
+                        Icons.notifications_rounded,
+                        cor: alertas.isNotEmpty
+                            ? Colors.orange
+                            : Colors.green)),
+              ],
+            ),
+
+            const SizedBox(height: 22),
+
+            // Sensor temperatura
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Sensor de Temperatura',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600)),
+                GestureDetector(
+                  onTap: () => setState(() => _currentIndex = 2),
+                  child: const Text('Ver mais',
+                      style: TextStyle(color: amarelo, fontSize: 13)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                  color: card, borderRadius: BorderRadius.circular(14)),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: amarelo.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.thermostat_rounded,
+                        color: amarelo, size: 28),
                   ),
-                  const TextSpan(
-                    text: 'Aqui está o resumo da sua obra.',
-                    style: TextStyle(color: Colors.white70, fontSize: 14),
+                  const SizedBox(width: 14),
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Temperatura',
+                          style: TextStyle(
+                              color: Colors.white54, fontSize: 12)),
+                      Text('28.6 °C',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text('Normal',
+                        style: TextStyle(
+                            color: Colors.green,
+                            fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
             ),
 
-            const SizedBox(height: 16),
-
-            // Card obra atual
-            _buildObraAtualCard(obraAtual),
-
             const SizedBox(height: 22),
 
-            // Título sensores
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Resumo dos Sensores',
-                  style: TextStyle(
+            const Text('Atividades Recentes',
+                style: TextStyle(
                     color: Colors.white,
                     fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () => setState(() => _currentIndex = 2),
-                  child: const Text(
-                    'Ver todos',
-                    style: TextStyle(color: amarelo, fontSize: 13),
-                  ),
-                ),
-              ],
-            ),
-
+                    fontWeight: FontWeight.w600)),
             const SizedBox(height: 12),
 
-            // Grid 4 sensores
-            Row(
-              children: [
-                Expanded(
-                  child: _sensorCard(
-                    'Temperatura',
-                    '28.6 °C',
-                    Icons.thermostat_rounded,
-                    'Normal',
-                    Colors.green,
+            alertas.isEmpty
+                ? Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                        color: card,
+                        borderRadius: BorderRadius.circular(12)),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.check_circle_outline_rounded,
+                            color: Colors.green, size: 20),
+                        SizedBox(width: 10),
+                        Text('Nenhuma atividade recente',
+                            style: TextStyle(color: Colors.white54)),
+                      ],
+                    ),
+                  )
+                : Column(
+                    children: alertas.take(3).map((a) {
+                      final critico = a.mensagem.contains('CRÍTICO') ||
+                          a.mensagem.contains('🔥');
+                      final hora =
+                          '${a.data.hour.toString().padLeft(2, '0')}:${a.data.minute.toString().padLeft(2, '0')}';
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: _atividadeItem(
+                          icon: critico
+                              ? Icons.local_fire_department_rounded
+                              : Icons.thermostat_rounded,
+                          iconBg:
+                              critico ? Colors.red.shade700 : Colors.orange,
+                          titulo: a.mensagem,
+                          descricao: 'Sensor de temperatura',
+                          hora: hora,
+                        ),
+                      );
+                    }).toList(),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _sensorCard(
-                    'Umidade',
-                    '65 %',
-                    Icons.water_drop_rounded,
-                    'Normal',
-                    Colors.green,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _sensorCard(
-                    'Vibração',
-                    '2.3 mm/s',
-                    Icons.vibration_rounded,
-                    'Atenção',
-                    Colors.orange,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _sensorCard(
-                    'Poeira',
-                    '35 µg/m³',
-                    Icons.cloud_rounded,
-                    'Normal',
-                    Colors.green,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 22),
-
-            // Atividades recentes
-            const Text(
-              'Atividades Recentes',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            _atividadeItem(
-              icon: Icons.build_rounded,
-              iconBg: Colors.orange.shade800,
-              titulo: 'Sensor de vibração',
-              descricao: 'Atenção: vibração acima do normal',
-              hora: '09:45',
-            ),
-            const SizedBox(height: 8),
-            _atividadeItem(
-              icon: Icons.water_drop_rounded,
-              iconBg: amarelo,
-              titulo: 'Sensor de umidade',
-              descricao: 'Leitura dentro da normalidade',
-              hora: '09:30',
-            ),
-            const SizedBox(height: 8),
-            _atividadeItem(
-              icon: Icons.thermostat_rounded,
-              iconBg: Colors.red.shade700,
-              titulo: 'Sensor de temperatura',
-              descricao: 'Leitura dentro da normalidade',
-              hora: '09:15',
-            ),
 
             const SizedBox(height: 20),
           ],
@@ -270,101 +335,28 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildObraAtualCard(dynamic obraAtual) {
+  Widget _statQuick(String label, String valor, IconData icon,
+      {Color cor = Colors.white}) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: amarelo,
-        borderRadius: BorderRadius.circular(14),
-      ),
+      padding: const EdgeInsets.all(14),
+      decoration:
+          BoxDecoration(color: card, borderRadius: BorderRadius.circular(12)),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.apartment_rounded,
-              color: Colors.black,
-              size: 28,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Obra Atual',
-                  style: TextStyle(color: Colors.black54, fontSize: 12),
-                ),
-                Text(
-                  obraAtual != null
-                      ? obraAtual.nome
-                      : 'Nenhuma obra cadastrada',
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                if (obraAtual != null)
-                  Text(
-                    obraAtual.endereco,
-                    style: const TextStyle(color: Colors.black87, fontSize: 12),
-                  ),
-              ],
-            ),
-          ),
-          const Icon(Icons.chevron_right_rounded, color: Colors.black54),
-        ],
-      ),
-    );
-  }
-
-  Widget _sensorCard(
-    String nome,
-    String valor,
-    IconData icon,
-    String status,
-    Color statusColor,
-  ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
-      decoration: BoxDecoration(
-        color: card,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
           Icon(icon, color: amarelo, size: 22),
-          const SizedBox(height: 6),
-          Text(
-            nome,
-            style: const TextStyle(color: Colors.white54, fontSize: 10),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            valor,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 11,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 3),
-          Text(
-            status,
-            style: TextStyle(
-              color: statusColor,
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-            ),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label,
+                  style:
+                      const TextStyle(color: Colors.white54, fontSize: 11)),
+              Text(valor,
+                  style: TextStyle(
+                      color: cor,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold)),
+            ],
           ),
         ],
       ),
@@ -380,15 +372,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }) {
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: card,
-        borderRadius: BorderRadius.circular(12),
-      ),
+      decoration:
+          BoxDecoration(color: card, borderRadius: BorderRadius.circular(12)),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
+            decoration:
+                BoxDecoration(color: iconBg, shape: BoxShape.circle),
             child: Icon(icon, color: Colors.white, size: 18),
           ),
           const SizedBox(width: 12),
@@ -396,34 +387,30 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  titulo,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                  ),
-                ),
-                Text(
-                  descricao,
-                  style: const TextStyle(color: Colors.white54, fontSize: 12),
-                ),
+                Text(titulo,
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis),
+                Text(descricao,
+                    style: const TextStyle(
+                        color: Colors.white54, fontSize: 12)),
               ],
             ),
           ),
-          Text(
-            hora,
-            style: const TextStyle(color: Colors.white54, fontSize: 12),
-          ),
+          Text(hora,
+              style:
+                  const TextStyle(color: Colors.white54, fontSize: 12)),
         ],
       ),
     );
   }
 
-  // ─────────────────── OBRAS ───────────────────
-  Widget _buildObrasTab(BuildContext context) {
+  // ──────────────── OBRAS ────────────────
+  Widget _buildObrasTab() {
     final obras = context.watch<ObraProvider>().obras;
-
     return SafeArea(
       child: Column(
         children: [
@@ -432,41 +419,30 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Row(
               children: [
                 const Expanded(
-                  child: Text(
-                    'Obras',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
+                    child: Text('Obras',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold))),
                 GestureDetector(
-                  onTap: () =>
-                      Navigator.pushNamed(context, AppRoutes.addObra).then((_) {
-                        context.read<ObraProvider>().carregarObras();
-                      }),
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.addObra)
+                      .then((_) =>
+                          context.read<ObraProvider>().carregarObras()),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 8,
-                    ),
+                        horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
-                      color: amarelo,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                        color: amarelo,
+                        borderRadius: BorderRadius.circular(10)),
                     child: const Row(
                       children: [
                         Icon(Icons.add, color: Colors.black, size: 18),
                         SizedBox(width: 4),
-                        Text(
-                          'Nova obra',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
-                        ),
+                        Text('Nova obra',
+                            style: TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13)),
                       ],
                     ),
                   ),
@@ -474,25 +450,18 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-
           const SizedBox(height: 16),
-
           obras.isEmpty
               ? Expanded(
                   child: Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.domain_disabled_rounded,
-                          color: Colors.white24,
-                          size: 64,
-                        ),
-                        const SizedBox(height: 12),
-                        const Text(
-                          'Nenhuma obra cadastrada',
-                          style: TextStyle(color: Colors.white38),
-                        ),
+                      children: const [
+                        Icon(Icons.domain_disabled_rounded,
+                            color: Colors.white24, size: 64),
+                        SizedBox(height: 12),
+                        Text('Nenhuma obra cadastrada',
+                            style: TextStyle(color: Colors.white38)),
                       ],
                     ),
                   ),
@@ -502,7 +471,62 @@ class _HomeScreenState extends State<HomeScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: obras.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (context, i) => _obraCard(context, obras[i]),
+                    itemBuilder: (context, i) {
+                      final o = obras[i];
+                      return GestureDetector(
+                        onTap: () => Navigator.pushNamed(
+                          context,
+                          AppRoutes.detalheObra,
+                          arguments: o.id,
+                        ).then((_) =>
+                            context.read<ObraProvider>().carregarObras()),
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: card,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: Colors.white10),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: amarelo.withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(Icons.apartment_rounded,
+                                    color: amarelo, size: 24),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Text(o.nome,
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15)),
+                                    Text(o.endereco,
+                                        style: const TextStyle(
+                                            color: Colors.white54,
+                                            fontSize: 13)),
+                                    Text('Resp.: ${o.responsavel}',
+                                        style: const TextStyle(
+                                            color: Colors.white38,
+                                            fontSize: 12)),
+                                  ],
+                                ),
+                              ),
+                              const Icon(Icons.chevron_right_rounded,
+                                  color: Colors.white38),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
         ],
@@ -510,98 +534,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _obraCard(BuildContext context, dynamic obra) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: card,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: amarelo.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.apartment_rounded,
-              color: amarelo,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  obra.nome,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  obra.endereco,
-                  style: const TextStyle(color: Colors.white54, fontSize: 13),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Resp.: ${obra.responsavel}',
-                  style: const TextStyle(color: Colors.white38, fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete_outline_rounded, color: Colors.red),
-            onPressed: () async {
-              final confirmar = await showDialog<bool>(
-                context: context,
-                builder: (_) => AlertDialog(
-                  backgroundColor: card,
-                  title: const Text(
-                    'Excluir obra',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  content: Text(
-                    'Deseja excluir "${obra.nome}"?',
-                    style: const TextStyle(color: Colors.white70),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: const Text(
-                        'Cancelar',
-                        style: TextStyle(color: Colors.white54),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      child: const Text(
-                        'Excluir',
-                        style: TextStyle(color: Colors.red),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-              if (confirmar == true) {
-                context.read<ObraProvider>().removerObra(obra.id);
-              }
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ─────────────────── SENSORES ───────────────────
+  // ──────────────── SENSORES (só temperatura) ────────────────
   Widget _buildSensoresTab() {
     return SafeArea(
       child: SingleChildScrollView(
@@ -609,96 +542,61 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Sensores',
-                  style: TextStyle(
+            const Text('Sensor de Temperatura',
+                style: TextStyle(
                     color: Colors.white,
                     fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Icon(Icons.tune_rounded, color: Colors.white54),
-              ],
-            ),
+                    fontWeight: FontWeight.bold)),
+            const SizedBox(height: 6),
+            const Text('Dados enviados via ESP32 + MQTT',
+                style: TextStyle(color: Colors.white38, fontSize: 12)),
 
             const SizedBox(height: 16),
 
-            // Tabs
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _sensorTab('Temperatura', true),
-                  _sensorTab('Umidade', false),
-                  _sensorTab('Vibração', false),
-                  _sensorTab('Poeira', false),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Status atual
+            // Card status
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: amarelo,
-                borderRadius: BorderRadius.circular(14),
-              ),
+                  color: amarelo, borderRadius: BorderRadius.circular(14)),
               child: Row(
                 children: [
-                  const Icon(
-                    Icons.thermostat_rounded,
-                    color: Colors.black,
-                    size: 40,
-                  ),
+                  const Icon(Icons.thermostat_rounded,
+                      color: Colors.black, size: 44),
                   const SizedBox(width: 16),
                   const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Temperatura Atual',
-                        style: TextStyle(color: Colors.black54, fontSize: 12),
-                      ),
-                      Text(
-                        '28.6 °C',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      Text('Temperatura Atual',
+                          style: TextStyle(
+                              color: Colors.black54, fontSize: 12)),
+                      Text('28.6 °C',
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 30,
+                              fontWeight: FontWeight.bold)),
                     ],
                   ),
                   const Spacer(),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      const Text(
-                        'Status',
-                        style: TextStyle(color: Colors.black54, fontSize: 12),
-                      ),
+                      const Text('Status',
+                          style: TextStyle(
+                              color: Colors.black54, fontSize: 12)),
                       Row(
                         children: [
-                          const Text(
-                            'Normal',
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          const Text('Normal',
+                              style: TextStyle(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold)),
                           const SizedBox(width: 6),
                           Container(
                             width: 10,
                             height: 10,
                             decoration: const BoxDecoration(
-                              color: Colors.green,
-                              shape: BoxShape.circle,
-                            ),
+                                color: Colors.green,
+                                shape: BoxShape.circle),
                           ),
                         ],
                       ),
@@ -710,38 +608,28 @@ class _HomeScreenState extends State<HomeScreen> {
 
             const SizedBox(height: 20),
 
-            const Text(
-              'Histórico - Últimas 24 horas',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            const Text('Histórico - Últimas 24 horas',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600)),
             const SizedBox(height: 12),
 
-            // Gráfico
             Container(
               height: 160,
-              width: double.infinity,
               padding: const EdgeInsets.fromLTRB(8, 12, 8, 20),
               decoration: BoxDecoration(
-                color: card,
-                borderRadius: BorderRadius.circular(14),
-              ),
+                  color: card, borderRadius: BorderRadius.circular(14)),
               child: CustomPaint(painter: _TempChartPainter()),
             ),
 
             const SizedBox(height: 20),
 
-            const Text(
-              'Estatísticas',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            const Text('Estatísticas',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600)),
             const SizedBox(height: 12),
 
             Row(
@@ -756,124 +644,33 @@ class _HomeScreenState extends State<HomeScreen> {
 
             const SizedBox(height: 20),
 
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: amarelo,
-                  foregroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                onPressed: () {},
-                icon: const Icon(Icons.download_rounded),
-                label: const Text(
-                  'Exportar Relatório',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                ),
+            // Info ESP32
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: card,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white10),
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _sensorTab(String label, bool ativo) {
-    return Container(
-      margin: const EdgeInsets.only(right: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: ativo ? amarelo : Colors.transparent,
-            width: 2,
-          ),
-        ),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: ativo ? amarelo : Colors.white54,
-          fontWeight: ativo ? FontWeight.bold : FontWeight.normal,
-          fontSize: 13,
-        ),
-      ),
-    );
-  }
-
-  Widget _statCard(String label, String valor) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: card,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          Text(
-            label,
-            style: const TextStyle(color: Colors.white54, fontSize: 12),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            valor,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ─────────────────── ALERTAS ───────────────────
-  Widget _buildAlertasTab() {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Alertas',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: ListView(
+              child: const Row(
                 children: [
-                  _alertaItem(
-                    cor: Colors.orange,
-                    icon: Icons.vibration_rounded,
-                    titulo: 'Vibração acima do normal',
-                    descricao:
-                        'Sensor registrou 2.3 mm/s na Obra Residencial Ville',
-                    hora: '09:45',
-                  ),
-                  const SizedBox(height: 10),
-                  _alertaItem(
-                    cor: Colors.green,
-                    icon: Icons.check_circle_rounded,
-                    titulo: 'Umidade normalizada',
-                    descricao: 'Sensor retornou ao intervalo normal: 65%',
-                    hora: '09:30',
-                  ),
-                  const SizedBox(height: 10),
-                  _alertaItem(
-                    cor: Colors.green,
-                    icon: Icons.thermostat_rounded,
-                    titulo: 'Temperatura estável',
-                    descricao: 'Temperatura em 28.6 °C — dentro do esperado',
-                    hora: '09:15',
+                  Icon(Icons.developer_board_rounded,
+                      color: amarelo, size: 20),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('ESP32 via MQTT',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600)),
+                        Text(
+                            'Tópico: obra/temperatura • Broker: HiveMQ',
+                            style: TextStyle(
+                                color: Colors.white54, fontSize: 11)),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -884,98 +681,344 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _alertaItem({
-    required Color cor,
-    required IconData icon,
-    required String titulo,
-    required String descricao,
-    required String hora,
-  }) {
+  Widget _statCard(String label, String valor) {
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: card,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: cor.withOpacity(0.3)),
-      ),
-      child: Row(
+      decoration:
+          BoxDecoration(color: card, borderRadius: BorderRadius.circular(12)),
+      child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: cor.withOpacity(0.2),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: cor, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  titulo,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  descricao,
-                  style: const TextStyle(color: Colors.white54, fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-          Text(
-            hora,
-            style: const TextStyle(color: Colors.white38, fontSize: 11),
-          ),
+          Text(label,
+              style:
+                  const TextStyle(color: Colors.white54, fontSize: 12)),
+          const SizedBox(height: 6),
+          Text(valor,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14)),
         ],
       ),
     );
   }
 
-  // ─────────────────── PERFIL ───────────────────
-  Widget _buildPerfilTab(BuildContext context, String nome) {
+  // ──────────────── ALERTAS ────────────────
+  Widget _buildAlertasTab() {
+    final provider = context.watch<AlertaProvider>();
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 20),
+            Row(
+              children: [
+                const Expanded(
+                    child: Text('Alertas',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold))),
+                if (provider.alertas.isNotEmpty)
+                  TextButton(
+                    onPressed: () => _confirmarLimparAlertas(provider),
+                    child: const Text('Limpar',
+                        style: TextStyle(color: Colors.red)),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            provider.alertas.isEmpty
+                ? Expanded(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Icon(Icons.notifications_off_rounded,
+                              color: Colors.white24, size: 64),
+                          SizedBox(height: 12),
+                          Text('Nenhum alerta registrado',
+                              style: TextStyle(color: Colors.white38)),
+                        ],
+                      ),
+                    ),
+                  )
+                : Expanded(
+                    child: ListView.separated(
+                      itemCount: provider.alertas.length,
+                      separatorBuilder: (_, __) =>
+                          const SizedBox(height: 10),
+                      itemBuilder: (context, i) {
+                        final a = provider.alertas[i];
+                        final critico = a.mensagem.contains('CRÍTICO') ||
+                            a.mensagem.contains('🔥');
+                        final atencao =
+                            a.mensagem.contains('⚠️') ||
+                                a.mensagem.contains('ALTA') ||
+                                a.mensagem.contains('ponto');
+                        final cor = critico
+                            ? Colors.red
+                            : atencao
+                                ? Colors.orange
+                                : Colors.green;
+                        final icon = a.mensagem.contains('ponto')
+                            ? Icons.fingerprint_rounded
+                            : critico
+                                ? Icons.local_fire_department_rounded
+                                : atencao
+                                    ? Icons.warning_rounded
+                                    : Icons.check_circle_rounded;
+
+                        final hora =
+                            '${a.data.hour.toString().padLeft(2, '0')}:${a.data.minute.toString().padLeft(2, '0')}';
+                        final data =
+                            '${a.data.day.toString().padLeft(2, '0')}/${a.data.month.toString().padLeft(2, '0')}';
+
+                        return Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: card,
+                            borderRadius: BorderRadius.circular(12),
+                            border:
+                                Border.all(color: cor.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                    color: cor.withOpacity(0.15),
+                                    shape: BoxShape.circle),
+                                child: Icon(icon, color: cor, size: 20),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                  child: Text(a.mensagem,
+                                      style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w500))),
+                              Column(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.end,
+                                children: [
+                                  Text(hora,
+                                      style: const TextStyle(
+                                          color: Colors.white54,
+                                          fontSize: 12)),
+                                  Text(data,
+                                      style: const TextStyle(
+                                          color: Colors.white38,
+                                          fontSize: 11)),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _confirmarLimparAlertas(AlertaProvider provider) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: card,
+        title: const Text('Limpar alertas',
+            style: TextStyle(color: Colors.white)),
+        content: const Text('Deseja apagar todos os alertas?',
+            style: TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar',
+                  style: TextStyle(color: Colors.white54))),
+          TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                provider.limparAlertas();
+              },
+              child: const Text('Limpar',
+                  style: TextStyle(color: Colors.red))),
+        ],
+      ),
+    );
+  }
+
+  // ──────────────── FUNCIONÁRIOS (aba resumida) ────────────────
+  Widget _buildFuncionariosTab() {
+    final funcionarios = context.watch<FuncionarioProvider>().funcionarios;
+    final obras = context.watch<ObraProvider>().obras;
+
+    return SafeArea(
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: Row(
+              children: [
+                const Expanded(
+                    child: Text('Funcionários',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold))),
+                GestureDetector(
+                  onTap: () =>
+                      Navigator.pushNamed(context, AppRoutes.funcionarios)
+                          .then((_) => context
+                              .read<FuncionarioProvider>()
+                              .carregarFuncionarios()),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                        color: amarelo,
+                        borderRadius: BorderRadius.circular(10)),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.people_alt_rounded,
+                            color: Colors.black, size: 18),
+                        SizedBox(width: 4),
+                        Text('Ver todos',
+                            style: TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13)),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          funcionarios.isEmpty
+              ? Expanded(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(Icons.person_off_rounded,
+                            color: Colors.white24, size: 64),
+                        SizedBox(height: 12),
+                        Text('Nenhum funcionário cadastrado',
+                            style: TextStyle(color: Colors.white38)),
+                      ],
+                    ),
+                  ),
+                )
+              : Expanded(
+                  child: ListView.separated(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: funcionarios.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemBuilder: (_, i) {
+                      final f = funcionarios[i];
+                      final nomeObra = f.obraId != null && obras.isNotEmpty
+                          ? obras
+                              .firstWhere((o) => o.id == f.obraId,
+                                  orElse: () => obras.first)
+                              .nome
+                          : 'Sem obra';
+                      return GestureDetector(
+                        onTap: () => Navigator.pushNamed(
+                            context, AppRoutes.cartaoPonto,
+                            arguments: f.id),
+                        child: Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: card,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: Colors.white10),
+                          ),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 20,
+                                backgroundColor: amarelo.withOpacity(0.2),
+                                child: Text(f.nome[0].toUpperCase(),
+                                    style: const TextStyle(
+                                        color: amarelo,
+                                        fontWeight: FontWeight.bold)),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Text(f.nome,
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w600)),
+                                    Text(
+                                        '${f.funcao} • $nomeObra',
+                                        style: const TextStyle(
+                                            color: Colors.white54,
+                                            fontSize: 12)),
+                                  ],
+                                ),
+                              ),
+                              const Icon(Icons.arrow_forward_ios_rounded,
+                                  color: amarelo, size: 14),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+        ],
+      ),
+    );
+  }
+
+  // ──────────────── PERFIL ────────────────
+  Widget _buildPerfilTab(BuildContext context, String nome) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            const SizedBox(height: 10),
             CircleAvatar(
               radius: 44,
               backgroundColor: amarelo,
               child: Text(
                 nome.isNotEmpty ? nome[0].toUpperCase() : 'U',
                 style: const TextStyle(
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black),
               ),
             ),
             const SizedBox(height: 12),
-            Text(
-              nome,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const Text(
-              'Engenheiro Responsável',
-              style: TextStyle(color: Colors.white54, fontSize: 13),
-            ),
+            Text(nome,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold)),
+            const Text('Engenheiro Responsável',
+                style: TextStyle(color: Colors.white54, fontSize: 13)),
+
             const SizedBox(height: 30),
-            _perfilItem(Icons.person_outline_rounded, 'Meu Perfil'),
-            _perfilItem(Icons.notifications_none_rounded, 'Notificações'),
-            _perfilItem(Icons.help_outline_rounded, 'Ajuda'),
+
+            _perfilItem(Icons.person_outline_rounded, 'Meu Perfil', onTap: () {
+              _abrirEditarPerfil(context);
+            }),
+            _perfilItem(Icons.notifications_none_rounded, 'Notificações',
+                onTap: () => _abrirNotificacoes(context)),
+            _perfilItem(Icons.info_outline_rounded, 'Sobre o App',
+                onTap: () => _abrirSobre(context)),
+
             const SizedBox(height: 20),
+
             SizedBox(
               width: double.infinity,
               height: 52,
@@ -984,22 +1027,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   side: const BorderSide(color: Colors.red),
                   foregroundColor: Colors.red,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                      borderRadius: BorderRadius.circular(12)),
                 ),
                 onPressed: () {
                   context.read<AuthProvider>().logout();
                   Navigator.pushNamedAndRemoveUntil(
-                    context,
-                    AppRoutes.login,
-                    (r) => false,
-                  );
+                      context, AppRoutes.login, (r) => false);
                 },
                 icon: const Icon(Icons.logout_rounded),
-                label: const Text(
-                  'Sair da conta',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
+                label: const Text('Sair da conta',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -1008,39 +1045,273 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _perfilItem(IconData icon, String label) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: card,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: amarelo),
-          const SizedBox(width: 14),
-          Text(
-            label,
-            style: const TextStyle(color: Colors.white, fontSize: 14),
+  void _abrirEditarPerfil(BuildContext context) {
+    final auth = context.read<AuthProvider>();
+    final nomeCtrl = TextEditingController(text: auth.nome ?? '');
+    final telCtrl = TextEditingController(text: auth.telefone ?? '');
+    final senhaCtrl = TextEditingController();
+    bool salvando = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF1A1A1A),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModal) => Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 24,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 32,
           ),
-          const Spacer(),
-          const Icon(Icons.chevron_right_rounded, color: Colors.white38),
-        ],
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Editar Perfil',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold)),
+              const SizedBox(height: 20),
+              _modalCampo(nomeCtrl, 'Nome completo', Icons.person_rounded),
+              const SizedBox(height: 14),
+              _modalCampo(telCtrl, 'Telefone', Icons.phone_rounded,
+                  tipo: TextInputType.phone),
+              const SizedBox(height: 14),
+              _modalCampo(senhaCtrl, 'Nova senha (opcional)', Icons.lock_rounded,
+                  obscure: true),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: amarelo,
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12))),
+                  onPressed: salvando
+                      ? null
+                      : () async {
+                          setModal(() => salvando = true);
+                          final ok = await context
+                              .read<AuthProvider>()
+                              .atualizarPerfil(
+                                nome: nomeCtrl.text.trim(),
+                                telefone: telCtrl.text.trim(),
+                                novaSenha: senhaCtrl.text.isNotEmpty
+                                    ? senhaCtrl.text.trim()
+                                    : null,
+                              );
+                          setModal(() => salvando = false);
+                          if (!ctx.mounted) return;
+                          Navigator.pop(ctx);
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text(ok
+                                ? 'Perfil atualizado!'
+                                : 'Erro ao atualizar'),
+                            backgroundColor:
+                                ok ? Colors.green : Colors.red.shade700,
+                            behavior: SnackBarBehavior.floating,
+                          ));
+                        },
+                  child: salvando
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                              color: Colors.black, strokeWidth: 2))
+                      : const Text('SALVAR',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _abrirNotificacoes(BuildContext context) {
+    final alertas = context.read<AlertaProvider>().alertas;
+    final pontos = alertas
+        .where((a) => a.mensagem.toLowerCase().contains('ponto'))
+        .toList();
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1A1A1A),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Notificações de Ponto',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            pontos.isEmpty
+                ? const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Text('Nenhuma batida de ponto registrada',
+                          style: TextStyle(color: Colors.white38)),
+                    ),
+                  )
+                : SizedBox(
+                    height: 300,
+                    child: ListView.separated(
+                      itemCount: pontos.length,
+                      separatorBuilder: (_, __) =>
+                          const SizedBox(height: 8),
+                      itemBuilder: (_, i) {
+                        final a = pontos[i];
+                        return Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                              color: card,
+                              borderRadius: BorderRadius.circular(10)),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.fingerprint_rounded,
+                                  color: amarelo, size: 20),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                  child: Text(a.mensagem,
+                                      style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 13))),
+                              Text(
+                                '${a.data.hour.toString().padLeft(2, '0')}:${a.data.minute.toString().padLeft(2, '0')}',
+                                style: const TextStyle(
+                                    color: Colors.white54, fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _abrirSobre(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1A1A1A),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: amarelo.withOpacity(0.15),
+                shape: BoxShape.circle,
+              ),
+              child:
+                  const Icon(Icons.construction_rounded, color: amarelo, size: 40),
+            ),
+            const SizedBox(height: 14),
+            const Text('ObraTech',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
+            const Text('Versão 1.0.0',
+                style: TextStyle(color: Colors.white38, fontSize: 13)),
+            const SizedBox(height: 20),
+            const Text(
+              'O ObraTech é um sistema de gerenciamento inteligente para obras pequenas e médias. '
+              'Permite cadastrar obras, gerenciar funcionários, monitorar temperatura em tempo real '
+              'via ESP32 e acompanhar o ponto dos colaboradores com registro automático por RFID.\n\n'
+              'Desenvolvido como projeto integrador do curso de Engenharia.',
+              style: TextStyle(
+                  color: Colors.white70, fontSize: 13, height: 1.6),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            const Text('Ana Clara • Kauana Cravelin • Samara',
+                style: TextStyle(color: amarelo, fontSize: 13)),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _perfilItem(IconData icon, String label,
+      {VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration:
+            BoxDecoration(color: card, borderRadius: BorderRadius.circular(12)),
+        child: Row(
+          children: [
+            Icon(icon, color: amarelo),
+            const SizedBox(width: 14),
+            Text(label,
+                style:
+                    const TextStyle(color: Colors.white, fontSize: 14)),
+            const Spacer(),
+            const Icon(Icons.chevron_right_rounded, color: Colors.white38),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _modalCampo(TextEditingController ctrl, String hint, IconData icon,
+      {TextInputType tipo = TextInputType.text, bool obscure = false}) {
+    return Container(
+      decoration: BoxDecoration(
+          color: card,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white10)),
+      child: TextField(
+        controller: ctrl,
+        keyboardType: tipo,
+        obscureText: obscure,
+        style: const TextStyle(color: Colors.white),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: const TextStyle(color: Colors.white30),
+          prefixIcon: Icon(icon, color: amarelo, size: 20),
+          border: InputBorder.none,
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+        ),
       ),
     );
   }
 }
 
-// ─────────────────── GRÁFICO ───────────────────
+// ── GRÁFICO TEMPERATURA ──
 class _TempChartPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final linePaint = Paint()
       ..color = const Color(0xFFFFC107)
       ..strokeWidth = 2
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
+      ..style = PaintingStyle.stroke;
 
     final fillPaint = Paint()
       ..shader = LinearGradient(
@@ -1048,35 +1319,22 @@ class _TempChartPainter extends CustomPainter {
         end: Alignment.bottomCenter,
         colors: [
           const Color(0xFFFFC107).withOpacity(0.35),
-          const Color(0xFFFFC107).withOpacity(0.0),
+          Colors.transparent
         ],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
       ..style = PaintingStyle.fill;
 
-    final points = [
-      0.45,
-      0.35,
-      0.50,
-      0.68,
-      0.75,
-      0.62,
-      0.48,
-      0.42,
-      0.52,
-      0.58,
-      0.68,
-      0.70,
-      0.65,
-      0.60,
+    final pts = [
+      0.45, 0.35, 0.50, 0.68, 0.75, 0.62, 0.48, 0.42, 0.52, 0.58, 0.68,
+      0.70, 0.65, 0.60
     ];
-    final h = size.height - 16; // espaço para labels
-
+    final h = size.height - 16;
     final path = Path();
     final fill = Path();
 
-    for (int i = 0; i < points.length; i++) {
-      final x = (i / (points.length - 1)) * size.width;
-      final y = h - points[i] * h * 0.85;
+    for (int i = 0; i < pts.length; i++) {
+      final x = (i / (pts.length - 1)) * size.width;
+      final y = h - pts[i] * h * 0.85;
       if (i == 0) {
         path.moveTo(x, y);
         fill.moveTo(x, h);
@@ -1088,28 +1346,20 @@ class _TempChartPainter extends CustomPainter {
     }
     fill.lineTo(size.width, h);
     fill.close();
-
     canvas.drawPath(fill, fillPaint);
     canvas.drawPath(path, linePaint);
-
-    // Ponto final
-    final lx = size.width;
-    final ly = h - points.last * h * 0.85;
     canvas.drawCircle(
-      Offset(lx, ly),
+      Offset(size.width, h - pts.last * h * 0.85),
       5,
       Paint()..color = const Color(0xFFFFC107),
     );
-
-    // Labels eixo X
     final labels = ['10:00', '14:00', '18:00', '22:00', '06:00', '10:00'];
     for (int i = 0; i < labels.length; i++) {
       final x = (i / (labels.length - 1)) * size.width;
       final tp = TextPainter(
         text: TextSpan(
-          text: labels[i],
-          style: const TextStyle(color: Colors.white38, fontSize: 9),
-        ),
+            text: labels[i],
+            style: const TextStyle(color: Colors.white38, fontSize: 9)),
         textDirection: TextDirection.ltr,
       )..layout();
       tp.paint(canvas, Offset(x - tp.width / 2, size.height - 13));
@@ -1117,5 +1367,5 @@ class _TempChartPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant CustomPainter old) => false;
 }
