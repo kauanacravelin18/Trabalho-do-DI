@@ -9,6 +9,7 @@ import '../screens/register_screen.dart';
 import '../screens/iot_screen.dart';
 import '../screens/alertas_screen.dart';
 import '../screens/detalhe_obra_screen.dart';
+import '../screens/relatorio_screen.dart';
 
 class AppRoutes {
   static const login = '/';
@@ -21,6 +22,7 @@ class AppRoutes {
   static const register = '/register';
   static const iot = '/iot';
   static const alertas = '/alertas';
+  static const relatorio = '/relatorio';
 
   static Map<String, WidgetBuilder> routes = {
     login: (_) => const LoginScreen(),
@@ -31,19 +33,21 @@ class AppRoutes {
     register: (_) => const RegisterScreen(),
     iot: (_) => const IotScreen(),
     alertas: (_) => const AlertasScreen(),
+    relatorio: (_) => const RelatorioScreen(),
   };
 
-  // Rotas com argumentos (não entram no mapa estático)
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case detalheObra:
         final obraId = settings.arguments as String;
         return MaterialPageRoute(
-            builder: (_) => DetalheObraScreen(obraId: obraId));
+          builder: (_) => DetalheObraScreen(obraId: obraId),
+        );
       case cartaoPonto:
         final funcionarioId = settings.arguments as String;
         return MaterialPageRoute(
-            builder: (_) => CartaoPontoScreen(funcionarioId: funcionarioId));
+          builder: (_) => CartaoPontoScreen(funcionarioId: funcionarioId),
+        );
       default:
         return MaterialPageRoute(builder: (_) => const LoginScreen());
     }

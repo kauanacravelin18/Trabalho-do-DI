@@ -4,6 +4,7 @@ import 'providers/auth_provider.dart';
 import 'providers/obra_provider.dart';
 import 'providers/funcionario_provider.dart';
 import 'providers/alerta_provider.dart';
+import 'providers/sensor_provider.dart';
 import 'routes/app_routes.dart';
 import 'services/database_service.dart';
 
@@ -24,6 +25,7 @@ class ObraTechApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ObraProvider()),
         ChangeNotifierProvider(create: (_) => FuncionarioProvider()),
         ChangeNotifierProvider(create: (_) => AlertaProvider()),
+        ChangeNotifierProvider(create: (_) => SensorProvider()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

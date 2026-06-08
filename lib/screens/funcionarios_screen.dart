@@ -43,7 +43,8 @@ class _FuncionariosScreenState extends State<FuncionariosScreen> {
       isScrollControlled: true,
       backgroundColor: const Color(0xFF1A1A1A),
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setModal) => Padding(
           padding: EdgeInsets.only(
@@ -61,11 +62,14 @@ class _FuncionariosScreenState extends State<FuncionariosScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      editando == null ? 'Novo Funcionário' : 'Editar Funcionário',
+                      editando == null
+                          ? 'Novo Funcionário'
+                          : 'Editar Funcionário',
                       style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold),
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close, color: Colors.white54),
@@ -77,48 +81,68 @@ class _FuncionariosScreenState extends State<FuncionariosScreen> {
 
                 _lbl('Nome completo'),
                 const SizedBox(height: 6),
-                _campo(nomeCtrl, 'Ex: João da Silva', Icons.person_rounded,
-                    erro: erroNome,
-                    onChange: (_) => setModal(() => erroNome = null)),
+                _campo(
+                  nomeCtrl,
+                  'Ex: João da Silva',
+                  Icons.person_rounded,
+                  erro: erroNome,
+                  onChange: (_) => setModal(() => erroNome = null),
+                ),
 
                 const SizedBox(height: 14),
                 _lbl('Telefone'),
                 const SizedBox(height: 6),
-                _campo(telCtrl, '(00) 00000-0000', Icons.phone_rounded,
-                    tipo: TextInputType.phone,
-                    formatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                      _TelFormatter()
-                    ],
-                    erro: erroTel,
-                    onChange: (_) => setModal(() => erroTel = null)),
+                _campo(
+                  telCtrl,
+                  '(00) 00000-0000',
+                  Icons.phone_rounded,
+                  tipo: TextInputType.phone,
+                  formatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    _TelFormatter(),
+                  ],
+                  erro: erroTel,
+                  onChange: (_) => setModal(() => erroTel = null),
+                ),
 
                 const SizedBox(height: 14),
                 _lbl('CPF'),
                 const SizedBox(height: 6),
-                _campo(cpfCtrl, '000.000.000-00', Icons.badge_rounded,
-                    tipo: TextInputType.number,
-                    formatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                      _CpfFormatter()
-                    ],
-                    erro: erroCpf,
-                    onChange: (_) => setModal(() => erroCpf = null)),
+                _campo(
+                  cpfCtrl,
+                  '000.000.000-00',
+                  Icons.badge_rounded,
+                  tipo: TextInputType.number,
+                  formatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    _CpfFormatter(),
+                  ],
+                  erro: erroCpf,
+                  onChange: (_) => setModal(() => erroCpf = null),
+                ),
 
                 const SizedBox(height: 14),
                 _lbl('E-mail'),
                 const SizedBox(height: 6),
-                _campo(emailCtrl, 'funcionario@email.com', Icons.email_rounded,
-                    tipo: TextInputType.emailAddress,
-                    erro: erroEmail,
-                    onChange: (_) => setModal(() => erroEmail = null)),
+                _campo(
+                  emailCtrl,
+                  'funcionario@email.com',
+                  Icons.email_rounded,
+                  tipo: TextInputType.emailAddress,
+                  erro: erroEmail,
+                  onChange: (_) => setModal(() => erroEmail = null),
+                ),
 
                 const SizedBox(height: 14),
                 _lbl('Função / Profissão'),
                 const SizedBox(height: 6),
-                _campo(funcaoCtrl, 'Ex: Pedreiro, Eletricista...', Icons.work_rounded,
-                    erro: erroFuncao,
-                    onChange: (_) => setModal(() => erroFuncao = null)),
+                _campo(
+                  funcaoCtrl,
+                  'Ex: Pedreiro, Eletricista...',
+                  Icons.work_rounded,
+                  erro: erroFuncao,
+                  onChange: (_) => setModal(() => erroFuncao = null),
+                ),
 
                 const SizedBox(height: 14),
                 _lbl('Obra vinculada'),
@@ -135,31 +159,46 @@ class _FuncionariosScreenState extends State<FuncionariosScreen> {
                       value: obraSelecionada,
                       isExpanded: true,
                       dropdownColor: const Color(0xFF252525),
-                      hint: const Text('Selecione a obra',
-                          style: TextStyle(color: Colors.white30)),
+                      hint: const Text(
+                        'Selecione a obra',
+                        style: TextStyle(color: Colors.white30),
+                      ),
                       items: [
                         const DropdownMenuItem<String>(
                           value: null,
-                          child: Text('Nenhuma',
-                              style: TextStyle(color: Colors.white54)),
+                          child: Text(
+                            'Nenhuma',
+                            style: TextStyle(color: Colors.white54),
+                          ),
                         ),
-                        ...obras.map((o) => DropdownMenuItem(
-                              value: o.id,
-                              child: Row(children: [
-                                const Icon(Icons.apartment_rounded,
-                                    color: amarelo, size: 16),
+                        ...obras.map(
+                          (o) => DropdownMenuItem(
+                            value: o.id,
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.apartment_rounded,
+                                  color: amarelo,
+                                  size: 16,
+                                ),
                                 const SizedBox(width: 8),
                                 Expanded(
-                                    child: Text(o.nome,
-                                        style: const TextStyle(
-                                            color: Colors.white),
-                                        overflow: TextOverflow.ellipsis)),
-                              ]),
-                            )),
+                                  child: Text(
+                                    o.nome,
+                                    style: const TextStyle(color: Colors.white),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ],
                       onChanged: (v) => setModal(() => obraSelecionada = v),
-                      icon: const Icon(Icons.keyboard_arrow_down_rounded,
-                          color: Colors.white38),
+                      icon: const Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: Colors.white38,
+                      ),
                     ),
                   ),
                 ),
@@ -173,7 +212,8 @@ class _FuncionariosScreenState extends State<FuncionariosScreen> {
                       backgroundColor: amarelo,
                       foregroundColor: Colors.black,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     onPressed: salvando
                         ? null
@@ -202,8 +242,8 @@ class _FuncionariosScreenState extends State<FuncionariosScreen> {
                             if (temErro) return;
 
                             setModal(() => salvando = true);
-                            final provider =
-                                context.read<FuncionarioProvider>();
+                            final provider = context
+                                .read<FuncionarioProvider>();
                             String? erro;
 
                             if (editando == null) {
@@ -238,20 +278,24 @@ class _FuncionariosScreenState extends State<FuncionariosScreen> {
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                      content: Text(erro),
-                                      backgroundColor: Colors.red.shade700,
-                                      behavior: SnackBarBehavior.floating),
+                                    content: Text(erro),
+                                    backgroundColor: Colors.red.shade700,
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
                                 );
                               }
                             } else {
                               Navigator.pop(ctx);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                    content: Text(editando == null
+                                  content: Text(
+                                    editando == null
                                         ? 'Funcionário cadastrado!'
-                                        : 'Cadastro atualizado!'),
-                                    backgroundColor: Colors.green,
-                                    behavior: SnackBarBehavior.floating),
+                                        : 'Cadastro atualizado!',
+                                  ),
+                                  backgroundColor: Colors.green,
+                                  behavior: SnackBarBehavior.floating,
+                                ),
                               );
                             }
                           },
@@ -260,14 +304,19 @@ class _FuncionariosScreenState extends State<FuncionariosScreen> {
                             width: 22,
                             height: 22,
                             child: CircularProgressIndicator(
-                                color: Colors.black, strokeWidth: 2.5))
+                              color: Colors.black,
+                              strokeWidth: 2.5,
+                            ),
+                          )
                         : Text(
                             editando == null
                                 ? 'CADASTRAR FUNCIONÁRIO'
                                 : 'SALVAR ALTERAÇÕES',
                             style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 0.8)),
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
                   ),
                 ),
               ],
@@ -283,22 +332,29 @@ class _FuncionariosScreenState extends State<FuncionariosScreen> {
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: card,
-        title: const Text('Remover funcionário',
-            style: TextStyle(color: Colors.white)),
-        content: Text('Deseja remover ${f.nome}?',
-            style: const TextStyle(color: Colors.white70)),
+        title: const Text(
+          'Remover funcionário',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Text(
+          'Deseja remover ${f.nome}?',
+          style: const TextStyle(color: Colors.white70),
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar',
-                  style: TextStyle(color: Colors.white54))),
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Cancelar',
+              style: TextStyle(color: Colors.white54),
+            ),
+          ),
           TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                context.read<FuncionarioProvider>().removerFuncionario(f.id);
-              },
-              child:
-                  const Text('Remover', style: TextStyle(color: Colors.red))),
+            onPressed: () {
+              Navigator.pop(context);
+              context.read<FuncionarioProvider>().removerFuncionario(f.id);
+            },
+            child: const Text('Remover', style: TextStyle(color: Colors.red)),
+          ),
         ],
       ),
     );
@@ -317,9 +373,10 @@ class _FuncionariosScreenState extends State<FuncionariosScreen> {
           icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Funcionários',
-            style:
-                TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Funcionários',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
       ),
       floatingActionButton: FloatingActionButton(
@@ -334,35 +391,46 @@ class _FuncionariosScreenState extends State<FuncionariosScreen> {
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-                color: amarelo, borderRadius: BorderRadius.circular(14)),
+              color: amarelo,
+              borderRadius: BorderRadius.circular(14),
+            ),
             child: Row(
               children: [
-                const Icon(Icons.people_rounded,
-                    color: Colors.black, size: 36),
+                const Icon(Icons.people_rounded, color: Colors.black, size: 36),
                 const SizedBox(width: 16),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Total de funcionários',
-                        style: TextStyle(color: Colors.black54, fontSize: 12)),
-                    Text('${funcionarios.length}',
-                        style: const TextStyle(
-                            color: Colors.black,
-                            fontSize: 30,
-                            fontWeight: FontWeight.bold)),
+                    const Text(
+                      'Total de funcionários',
+                      style: TextStyle(color: Colors.black54, fontSize: 12),
+                    ),
+                    Text(
+                      '${funcionarios.length}',
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
                 const Spacer(),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    const Text('Obras ativas',
-                        style: TextStyle(color: Colors.black54, fontSize: 12)),
-                    Text('${obras.length}',
-                        style: const TextStyle(
-                            color: Colors.black,
-                            fontSize: 30,
-                            fontWeight: FontWeight.bold)),
+                    const Text(
+                      'Obras ativas',
+                      style: TextStyle(color: Colors.black54, fontSize: 12),
+                    ),
+                    Text(
+                      '${obras.length}',
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -375,33 +443,39 @@ class _FuncionariosScreenState extends State<FuncionariosScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: const [
-                        Icon(Icons.person_off_rounded,
-                            color: Colors.white24, size: 64),
+                        Icon(
+                          Icons.person_off_rounded,
+                          color: Colors.white24,
+                          size: 64,
+                        ),
                         SizedBox(height: 12),
-                        Text('Nenhum funcionário cadastrado',
-                            style: TextStyle(color: Colors.white38)),
+                        Text(
+                          'Nenhum funcionário cadastrado',
+                          style: TextStyle(color: Colors.white38),
+                        ),
                         SizedBox(height: 6),
-                        Text('Toque no + para adicionar',
-                            style: TextStyle(
-                                color: Colors.white24, fontSize: 12)),
+                        Text(
+                          'Toque no + para adicionar',
+                          style: TextStyle(color: Colors.white24, fontSize: 12),
+                        ),
                       ],
                     ),
                   ),
                 )
               : Expanded(
                   child: ListView.separated(
-                    padding:
-                        const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
                     itemCount: funcionarios.length,
-                    separatorBuilder: (_, __) =>
-                        const SizedBox(height: 10),
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
                     itemBuilder: (context, i) {
                       final f = funcionarios[i];
                       final nomeObra = f.obraId != null && obras.isNotEmpty
                           ? obras
-                              .firstWhere((o) => o.id == f.obraId,
-                                  orElse: () => obras.first)
-                              .nome
+                                .firstWhere(
+                                  (o) => o.id == f.obraId,
+                                  orElse: () => obras.first,
+                                )
+                                .nome
                           : null;
                       final ultima = f.batidas.isNotEmpty
                           ? f.batidas.last
@@ -427,14 +501,14 @@ class _FuncionariosScreenState extends State<FuncionariosScreen> {
                                 children: [
                                   CircleAvatar(
                                     radius: 22,
-                                    backgroundColor:
-                                        amarelo.withOpacity(0.2),
+                                    backgroundColor: amarelo.withOpacity(0.2),
                                     child: Text(
                                       f.nome[0].toUpperCase(),
                                       style: const TextStyle(
-                                          color: amarelo,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18),
+                                        color: amarelo,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: 12),
@@ -443,37 +517,44 @@ class _FuncionariosScreenState extends State<FuncionariosScreen> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        Text(f.nome,
-                                            style: const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 15)),
-                                        Text(f.funcao,
-                                            style: const TextStyle(
-                                                color: Colors.white54,
-                                                fontSize: 12)),
+                                        Text(
+                                          f.nome,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                        Text(
+                                          f.funcao,
+                                          style: const TextStyle(
+                                            color: Colors.white54,
+                                            fontSize: 12,
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
                                   IconButton(
-                                    icon: const Icon(Icons.edit_rounded,
-                                        color: amarelo, size: 20),
-                                    onPressed: () =>
-                                        _abrirModal(editando: f),
+                                    icon: const Icon(
+                                      Icons.edit_rounded,
+                                      color: amarelo,
+                                      size: 20,
+                                    ),
+                                    onPressed: () => _abrirModal(editando: f),
                                   ),
                                   IconButton(
                                     icon: const Icon(
-                                        Icons.delete_outline_rounded,
-                                        color: Colors.red,
-                                        size: 20),
-                                    onPressed: () =>
-                                        _confirmarExclusao(f),
+                                      Icons.delete_outline_rounded,
+                                      color: Colors.red,
+                                      size: 20,
+                                    ),
+                                    onPressed: () => _confirmarExclusao(f),
                                   ),
                                 ],
                               ),
                               const SizedBox(height: 10),
-                              const Divider(
-                                  color: Colors.white10, height: 1),
+                              const Divider(color: Colors.white10, height: 1),
                               const SizedBox(height: 10),
                               Wrap(
                                 spacing: 8,
@@ -483,14 +564,15 @@ class _FuncionariosScreenState extends State<FuncionariosScreen> {
                                   _chip(Icons.badge_rounded, f.cpf),
                                   _chip(Icons.email_rounded, f.email),
                                   if (nomeObra != null)
-                                    _chip(Icons.apartment_rounded,
-                                        nomeObra,
-                                        cor: amarelo),
+                                    _chip(
+                                      Icons.apartment_rounded,
+                                      nomeObra,
+                                      cor: amarelo,
+                                    ),
                                 ],
                               ),
                               const SizedBox(height: 10),
-                              const Divider(
-                                  color: Colors.white10, height: 1),
+                              const Divider(color: Colors.white10, height: 1),
                               const SizedBox(height: 8),
                               Row(
                                 children: [
@@ -507,25 +589,29 @@ class _FuncionariosScreenState extends State<FuncionariosScreen> {
                                         ? 'Última batida: ${ultima.day.toString().padLeft(2, '0')}/${ultima.month.toString().padLeft(2, '0')} às ${ultima.hour.toString().padLeft(2, '0')}:${ultima.minute.toString().padLeft(2, '0')}'
                                         : 'Nenhuma batida registrada',
                                     style: TextStyle(
-                                        color: ultima != null
-                                            ? Colors.green
-                                            : Colors.white38,
-                                        fontSize: 12),
+                                      color: ultima != null
+                                          ? Colors.green
+                                          : Colors.white38,
+                                      fontSize: 12,
+                                    ),
                                   ),
                                   const Spacer(),
                                   const Row(
                                     children: [
-                                      Text('Ver ponto',
-                                          style: TextStyle(
-                                              color: amarelo,
-                                              fontSize: 12,
-                                              fontWeight:
-                                                  FontWeight.w600)),
+                                      Text(
+                                        'Ver ponto',
+                                        style: TextStyle(
+                                          color: amarelo,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
                                       SizedBox(width: 2),
                                       Icon(
-                                          Icons.arrow_forward_ios_rounded,
-                                          color: amarelo,
-                                          size: 11),
+                                        Icons.arrow_forward_ios_rounded,
+                                        color: amarelo,
+                                        size: 11,
+                                      ),
                                     ],
                                   ),
                                 ],
@@ -561,11 +647,14 @@ class _FuncionariosScreenState extends State<FuncionariosScreen> {
     );
   }
 
-  Widget _lbl(String t) => Text(t,
-      style: const TextStyle(
-          color: Colors.white70,
-          fontSize: 13,
-          fontWeight: FontWeight.w600));
+  Widget _lbl(String t) => Text(
+    t,
+    style: const TextStyle(
+      color: Colors.white70,
+      fontSize: 13,
+      fontWeight: FontWeight.w600,
+    ),
+  );
 
   Widget _campo(
     TextEditingController ctrl,
@@ -584,8 +673,8 @@ class _FuncionariosScreenState extends State<FuncionariosScreen> {
             color: card,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-                color:
-                    erro != null ? Colors.red.shade700 : Colors.white10),
+              color: erro != null ? Colors.red.shade700 : Colors.white10,
+            ),
           ),
           child: TextField(
             controller: ctrl,
@@ -599,20 +688,28 @@ class _FuncionariosScreenState extends State<FuncionariosScreen> {
               prefixIcon: Icon(icon, color: amarelo, size: 20),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(
-                  vertical: 14, horizontal: 12),
+                vertical: 14,
+                horizontal: 12,
+              ),
             ),
           ),
         ),
         if (erro != null) ...[
           const SizedBox(height: 4),
-          Row(children: [
-            const Icon(Icons.error_outline_rounded,
-                color: Colors.red, size: 13),
-            const SizedBox(width: 4),
-            Text(erro,
-                style:
-                    const TextStyle(color: Colors.red, fontSize: 12)),
-          ]),
+          Row(
+            children: [
+              const Icon(
+                Icons.error_outline_rounded,
+                color: Colors.red,
+                size: 13,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                erro,
+                style: const TextStyle(color: Colors.red, fontSize: 12),
+              ),
+            ],
+          ),
         ],
       ],
     );
@@ -622,8 +719,7 @@ class _FuncionariosScreenState extends State<FuncionariosScreen> {
 // ── FORMATADORES ──
 class _CpfFormatter extends TextInputFormatter {
   @override
-  TextEditingValue formatEditUpdate(
-      TextEditingValue old, TextEditingValue nv) {
+  TextEditingValue formatEditUpdate(TextEditingValue old, TextEditingValue nv) {
     final d = nv.text.replaceAll(RegExp(r'[^0-9]'), '');
     final b = StringBuffer();
     for (int i = 0; i < d.length && i < 11; i++) {
@@ -633,14 +729,15 @@ class _CpfFormatter extends TextInputFormatter {
     }
     final f = b.toString();
     return TextEditingValue(
-        text: f, selection: TextSelection.collapsed(offset: f.length));
+      text: f,
+      selection: TextSelection.collapsed(offset: f.length),
+    );
   }
 }
 
 class _TelFormatter extends TextInputFormatter {
   @override
-  TextEditingValue formatEditUpdate(
-      TextEditingValue old, TextEditingValue nv) {
+  TextEditingValue formatEditUpdate(TextEditingValue old, TextEditingValue nv) {
     final d = nv.text.replaceAll(RegExp(r'[^0-9]'), '');
     final b = StringBuffer();
     for (int i = 0; i < d.length && i < 11; i++) {
@@ -651,6 +748,8 @@ class _TelFormatter extends TextInputFormatter {
     }
     final f = b.toString();
     return TextEditingValue(
-        text: f, selection: TextSelection.collapsed(offset: f.length));
+      text: f,
+      selection: TextSelection.collapsed(offset: f.length),
+    );
   }
 }

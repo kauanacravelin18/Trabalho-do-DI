@@ -4,6 +4,7 @@ import 'package:sqflite/sqflite.dart';
 class DatabaseService {
   static final DatabaseService instance = DatabaseService._init();
   static Database? _database;
+
   DatabaseService._init();
 
   Future<Database> get database async {
@@ -15,9 +16,10 @@ class DatabaseService {
   Future<Database> _initDB(String filePath) async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
+
     return await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -32,6 +34,7 @@ class DatabaseService {
         responsavel TEXT
       )
     ''');
+
     await db.execute('''
       CREATE TABLE alertas (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -39,6 +42,7 @@ class DatabaseService {
         data TEXT
       )
     ''');
+
     await db.execute('''
       CREATE TABLE usuarios (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -48,6 +52,7 @@ class DatabaseService {
         telefone TEXT
       )
     ''');
+
     await db.execute('''
       CREATE TABLE funcionarios (
         id TEXT PRIMARY KEY,
@@ -58,6 +63,15 @@ class DatabaseService {
         funcao TEXT NOT NULL,
         obraId TEXT,
         batidas TEXT
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE leituras_temperatura (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        temperatura REAL NOT NULL,
+        umidade REAL NOT NULL,
+        dataHora TEXT NOT NULL
       )
     ''');
   }
@@ -77,17 +91,31 @@ class DatabaseService {
         )
       ''');
     }
+
     if (oldVersion < 3) {
       try {
         await db.execute('ALTER TABLE funcionarios ADD COLUMN telefone TEXT');
       } catch (_) {}
+
       try {
         await db.execute('ALTER TABLE usuarios ADD COLUMN telefone TEXT');
       } catch (_) {}
     }
+
+    if (oldVersion < 4) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS leituras_temperatura (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          temperatura REAL NOT NULL,
+          umidade REAL NOT NULL,
+          dataHora TEXT NOT NULL
+        )
+      ''');
+    }
   }
 
-  // ── OBRAS ──
+  // ───────────────── OBRAS ─────────────────
+
   Future<int> inserirObra(Map<String, dynamic> obra) async {
     final db = await instance.database;
     return await db.insert('obras', obra);
@@ -108,7 +136,8 @@ class DatabaseService {
     return await db.delete('obras', where: 'id = ?', whereArgs: [id]);
   }
 
-  // ── ALERTAS ──
+  // ───────────────── ALERTAS ─────────────────
+
   Future<int> inserirAlerta(Map<String, dynamic> alerta) async {
     final db = await instance.database;
     return await db.insert('alertas', alerta);
@@ -124,32 +153,51 @@ class DatabaseService {
     await db.delete('alertas');
   }
 
-  // ── USUÁRIOS ──
+  // ───────────────── USUÁRIOS ─────────────────
+
   Future<int> inserirUsuario(Map<String, dynamic> usuario) async {
     final db = await instance.database;
-    return await db.insert('usuarios', usuario,
-        conflictAlgorithm: ConflictAlgorithm.abort);
+    return await db.insert(
+      'usuarios',
+      usuario,
+      conflictAlgorithm: ConflictAlgorithm.abort,
+    );
   }
 
   Future<Map<String, dynamic>?> buscarUsuarioPorEmail(String email) async {
     final db = await instance.database;
-    final resultado = await db.query('usuarios',
-        where: 'email = ?', whereArgs: [email], limit: 1);
+    final resultado = await db.query(
+      'usuarios',
+      where: 'email = ?',
+      whereArgs: [email],
+      limit: 1,
+    );
     if (resultado.isEmpty) return null;
     return resultado.first;
   }
 
   Future<bool> atualizarSenha(String email, String novaSenha) async {
     final db = await instance.database;
-    final linhas = await db.update('usuarios', {'senha': novaSenha},
-        where: 'email = ?', whereArgs: [email]);
+    final linhas = await db.update(
+      'usuarios',
+      {'senha': novaSenha},
+      where: 'email = ?',
+      whereArgs: [email],
+    );
     return linhas > 0;
   }
 
-  Future<bool> atualizarUsuario(String email, Map<String, dynamic> dados) async {
+  Future<bool> atualizarUsuario(
+    String email,
+    Map<String, dynamic> dados,
+  ) async {
     final db = await instance.database;
-    final linhas = await db.update('usuarios', dados,
-        where: 'email = ?', whereArgs: [email]);
+    final linhas = await db.update(
+      'usuarios',
+      dados,
+      where: 'email = ?',
+      whereArgs: [email],
+    );
     return linhas > 0;
   }
 
@@ -163,11 +211,15 @@ class DatabaseService {
     return await db.delete('usuarios', where: 'id = ?', whereArgs: [id]);
   }
 
-  // ── FUNCIONÁRIOS ──
+  // ───────────────── FUNCIONÁRIOS ─────────────────
+
   Future<void> inserirFuncionario(Map<String, dynamic> f) async {
     final db = await instance.database;
-    await db.insert('funcionarios', f,
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert(
+      'funcionarios',
+      f,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<List<Map<String, dynamic>>> buscarFuncionarios() async {
@@ -187,8 +239,52 @@ class DatabaseService {
 
   Future<void> registrarBatida(String id, String batidas) async {
     final db = await instance.database;
-    await db.update('funcionarios', {'batidas': batidas},
-        where: 'id = ?', whereArgs: [id]);
+    await db.update(
+      'funcionarios',
+      {'batidas': batidas},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  // ───────────────── LEITURAS TEMPERATURA ─────────────────
+
+  Future<void> inserirLeitura(double temperatura, double umidade) async {
+    final db = await instance.database;
+    await db.insert('leituras_temperatura', {
+      'temperatura': temperatura,
+      'umidade': umidade,
+      'dataHora': DateTime.now().toIso8601String(),
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> buscarLeituras() async {
+    final db = await instance.database;
+    return await db.query('leituras_temperatura', orderBy: 'id DESC');
+  }
+
+  Future<Map<String, dynamic>> obterRelatorioTemperatura() async {
+    final db = await instance.database;
+
+    final media = await db.rawQuery(
+      'SELECT AVG(temperatura) AS valor FROM leituras_temperatura',
+    );
+    final maximo = await db.rawQuery(
+      'SELECT MAX(temperatura) AS valor FROM leituras_temperatura',
+    );
+    final minimo = await db.rawQuery(
+      'SELECT MIN(temperatura) AS valor FROM leituras_temperatura',
+    );
+    final quantidade = await db.rawQuery(
+      'SELECT COUNT(*) AS valor FROM leituras_temperatura',
+    );
+
+    return {
+      'media': media.first['valor'] ?? 0.0,
+      'maximo': maximo.first['valor'] ?? 0.0,
+      'minimo': minimo.first['valor'] ?? 0.0,
+      'quantidade': quantidade.first['valor'] ?? 0,
+    };
   }
 
   Future close() async {

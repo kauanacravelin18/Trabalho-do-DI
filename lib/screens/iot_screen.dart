@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../services/mqtt_service.dart';
+import '../services/database_service.dart';
 import '../providers/alerta_provider.dart';
 
 class IotScreen extends StatefulWidget {
@@ -13,8 +15,11 @@ class IotScreen extends StatefulWidget {
 class _IotScreenState extends State<IotScreen> {
   double temperatura = 0;
   double umidade = 0;
+
   List<double> historico = [];
+
   final mqtt = MqttService();
+
   bool conectado = false;
 
   static const Color amarelo = Color(0xFFFFC107);
@@ -24,16 +29,28 @@ class _IotScreenState extends State<IotScreen> {
   @override
   void initState() {
     super.initState();
-    mqtt.onData = (temp, umi) {
+
+    mqtt.onData = (temp, umi) async {
       setState(() {
         temperatura = temp;
         umidade = umi;
+
         historico.add(temp);
-        if (historico.length > 20) historico.removeAt(0);
+
+        if (historico.length > 20) {
+          historico.removeAt(0);
+        }
+
         conectado = true;
       });
+
+      // Salva histórico no SQLite
+      await DatabaseService.instance.inserirLeitura(temp, umi);
+
+      // Dispara alertas
       context.read<AlertaProvider>().verificarTemperatura(temp);
     };
+
     mqtt.connect();
   }
 
@@ -103,7 +120,7 @@ class _IotScreenState extends State<IotScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Card temperatura
+            // Temperatura
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -173,7 +190,7 @@ class _IotScreenState extends State<IotScreen> {
 
             const SizedBox(height: 16),
 
-            // Card umidade
+            // Umidade
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
@@ -242,6 +259,7 @@ class _IotScreenState extends State<IotScreen> {
                 fontWeight: FontWeight.w600,
               ),
             ),
+
             const SizedBox(height: 12),
 
             Container(
@@ -263,7 +281,6 @@ class _IotScreenState extends State<IotScreen> {
 
             const SizedBox(height: 22),
 
-            // Alertas automáticos
             const Text(
               'Regras de Alerta',
               style: TextStyle(
@@ -272,6 +289,7 @@ class _IotScreenState extends State<IotScreen> {
                 fontWeight: FontWeight.w600,
               ),
             ),
+
             const SizedBox(height: 12),
 
             _regraAlerta(
@@ -280,14 +298,18 @@ class _IotScreenState extends State<IotScreen> {
               'Alerta CRÍTICO disparado',
               Colors.red,
             ),
+
             const SizedBox(height: 8),
+
             _regraAlerta(
               Icons.thermostat_outlined,
               'Temperatura > 30°C',
               'Alerta de ATENÇÃO disparado',
               Colors.orange,
             ),
+
             const SizedBox(height: 8),
+
             _regraAlerta(
               Icons.water_drop_rounded,
               'Umidade > 80%',
@@ -349,70 +371,52 @@ class _IotScreenState extends State<IotScreen> {
 
 class _LiveChartPainter extends CustomPainter {
   final List<double> dados;
+
   _LiveChartPainter(this.dados);
 
   @override
   void paint(Canvas canvas, Size size) {
     if (dados.length < 2) return;
 
-    final min = dados.reduce((a, b) => a < b ? a : b) - 2;
-    final max = dados.reduce((a, b) => a > b ? a : b) + 2;
-    final range = max - min;
-    final h = size.height - 16;
-
-    final linePaint = Paint()
-      ..color = const Color(0xFFFFC107)
-      ..strokeWidth = 2
+    final linha = Paint()
+      ..color = Colors.amber
+      ..strokeWidth = 3
       ..style = PaintingStyle.stroke;
 
-    final fillPaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [const Color(0xFFFFC107).withOpacity(0.3), Colors.transparent],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
-      ..style = PaintingStyle.fill;
+    final grade = Paint()
+      ..color = Colors.white12
+      ..strokeWidth = 1;
+
+    for (int i = 0; i < 5; i++) {
+      double y = size.height * (i / 4);
+
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), grade);
+    }
+
+    double min = dados.reduce((a, b) => a < b ? a : b);
+    double max = dados.reduce((a, b) => a > b ? a : b);
+
+    if (max == min) {
+      max += 1;
+    }
 
     final path = Path();
-    final fill = Path();
 
     for (int i = 0; i < dados.length; i++) {
-      final x = (i / (dados.length - 1)) * size.width;
-      final y = h - ((dados[i] - min) / range) * h;
+      double x = (i / (dados.length - 1)) * size.width;
+
+      double y = size.height - ((dados[i] - min) / (max - min)) * size.height;
+
       if (i == 0) {
         path.moveTo(x, y);
-        fill.moveTo(x, h);
-        fill.lineTo(x, y);
       } else {
         path.lineTo(x, y);
-        fill.lineTo(x, y);
       }
     }
-    fill.lineTo(size.width, h);
-    fill.close();
 
-    canvas.drawPath(fill, fillPaint);
-    canvas.drawPath(path, linePaint);
-
-    // Ponto atual com label
-    final lx = size.width;
-    final ly = h - ((dados.last - min) / range) * h;
-    canvas.drawCircle(
-      Offset(lx, ly),
-      5,
-      Paint()..color = const Color(0xFFFFC107),
-    );
-
-    final tp = TextPainter(
-      text: TextSpan(
-        text: '${dados.last.toStringAsFixed(1)} °C',
-        style: const TextStyle(color: Colors.white, fontSize: 10),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    tp.paint(canvas, Offset(lx - tp.width - 8, ly - 16));
+    canvas.drawPath(path, linha);
   }
 
   @override
-  bool shouldRepaint(covariant _LiveChartPainter old) => old.dados != dados;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
