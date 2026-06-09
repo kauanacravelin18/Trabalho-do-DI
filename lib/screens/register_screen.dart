@@ -47,11 +47,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    if (senha.length < 6) {
-      _snack('A senha deve ter pelo menos 6 caracteres', Colors.red.shade700);
-      return;
-    }
-
     setState(() => _carregando = true);
 
     final ok = await context.read<AuthProvider>().register(nome, email, senha);
@@ -166,7 +161,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const SizedBox(height: 8),
                   _campoSenha(
                     controller: _senhaController,
-                    hint: 'Mínimo 6 caracteres',
+                    hint: 'Digite sua senha',
                     verSenha: _verSenha,
                     onToggle: () => setState(() => _verSenha = !_verSenha),
                   ),
