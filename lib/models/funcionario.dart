@@ -6,6 +6,7 @@ class Funcionario {
   final String email;
   final String funcao;
   final String? obraId;
+  final String? uid; // UID do cartão RFID
   final List<DateTime> batidas;
 
   Funcionario({
@@ -16,6 +17,7 @@ class Funcionario {
     required this.email,
     required this.funcao,
     this.obraId,
+    this.uid,
     List<DateTime>? batidas,
   }) : batidas = batidas ?? [];
 
@@ -26,6 +28,7 @@ class Funcionario {
     String? email,
     String? funcao,
     String? obraId,
+    String? uid,
     List<DateTime>? batidas,
   }) {
     return Funcionario(
@@ -36,6 +39,7 @@ class Funcionario {
       email: email ?? this.email,
       funcao: funcao ?? this.funcao,
       obraId: obraId ?? this.obraId,
+      uid: uid ?? this.uid,
       batidas: batidas ?? this.batidas,
     );
   }
@@ -49,6 +53,7 @@ class Funcionario {
       'email': email,
       'funcao': funcao,
       'obraId': obraId,
+      'uid': uid,
       'batidas': batidas.map((b) => b.toIso8601String()).join('|'),
     };
   }
@@ -58,10 +63,10 @@ class Funcionario {
     final batidas = batidasRaw.isEmpty
         ? <DateTime>[]
         : batidasRaw
-            .split('|')
-            .where((s) => s.isNotEmpty)
-            .map((s) => DateTime.parse(s))
-            .toList();
+              .split('|')
+              .where((s) => s.isNotEmpty)
+              .map((s) => DateTime.parse(s))
+              .toList();
     return Funcionario(
       id: map['id'].toString(),
       nome: map['nome'] ?? '',
@@ -70,6 +75,7 @@ class Funcionario {
       email: map['email'] ?? '',
       funcao: map['funcao'] ?? '',
       obraId: map['obraId']?.toString(),
+      uid: map['uid']?.toString(),
       batidas: batidas,
     );
   }
