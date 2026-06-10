@@ -653,7 +653,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ──────────────── SENSORES (só temperatura) ────────────────
+  // ──────────────── SENSORES ────────────────
   Widget _buildSensoresTab() {
     return SafeArea(
       child: SingleChildScrollView(
@@ -677,7 +677,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
             const SizedBox(height: 16),
 
-            // Card status
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -790,7 +789,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
             const SizedBox(height: 20),
 
-            // Info ESP32
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
@@ -877,6 +875,36 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
+                // Botão Relatório
+                GestureDetector(
+                  onTap: () => _abrirRelatorio(provider),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: amarelo.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: amarelo.withOpacity(0.4)),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.bar_chart_rounded, color: amarelo, size: 16),
+                        SizedBox(width: 4),
+                        Text(
+                          'Relatório',
+                          style: TextStyle(
+                            color: amarelo,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
                 if (provider.alertas.isNotEmpty)
                   TextButton(
                     onPressed: () => _confirmarLimparAlertas(provider),
@@ -998,6 +1026,250 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _abrirRelatorio(AlertaProvider provider) {
+    final alertas = provider.alertas;
+    final total = alertas.length;
+    final criticos = alertas
+        .where(
+          (a) => a.mensagem.contains('CRÍTICO') || a.mensagem.contains('🔥'),
+        )
+        .length;
+    final atencao = alertas
+        .where(
+          (a) =>
+              a.mensagem.contains('⚠️') ||
+              a.mensagem.contains('ALTA') ||
+              a.mensagem.contains('ponto'),
+        )
+        .length;
+    final normais = total - criticos - atencao;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1A1A1A),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Título
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: amarelo.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.bar_chart_rounded,
+                    color: amarelo,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Relatório de Alertas',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+
+            // Total
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: amarelo,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.notifications_rounded,
+                    color: Colors.black,
+                    size: 28,
+                  ),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Total de alertas',
+                        style: TextStyle(color: Colors.black54, fontSize: 12),
+                      ),
+                      Text(
+                        '$total alerta${total != 1 ? 's' : ''}',
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 14),
+
+            // Cards por tipo
+            Row(
+              children: [
+                Expanded(
+                  child: _cardRelatorio(
+                    'Críticos',
+                    criticos,
+                    Icons.local_fire_department_rounded,
+                    Colors.red,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _cardRelatorio(
+                    'Atenção',
+                    atencao,
+                    Icons.warning_rounded,
+                    Colors.orange,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _cardRelatorio(
+                    'Normais',
+                    normais,
+                    Icons.check_circle_rounded,
+                    Colors.green,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 14),
+
+            // Barra de proporção visual
+            if (total > 0) ...[
+              const Text(
+                'Proporção',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Row(
+                  children: [
+                    if (criticos > 0)
+                      Expanded(
+                        flex: criticos,
+                        child: Container(height: 14, color: Colors.red),
+                      ),
+                    if (atencao > 0)
+                      Expanded(
+                        flex: atencao,
+                        child: Container(height: 14, color: Colors.orange),
+                      ),
+                    if (normais > 0)
+                      Expanded(
+                        flex: normais,
+                        child: Container(height: 14, color: Colors.green),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  _legendaItem(Colors.red, 'Crítico'),
+                  const SizedBox(width: 12),
+                  _legendaItem(Colors.orange, 'Atenção'),
+                  const SizedBox(width: 12),
+                  _legendaItem(Colors.green, 'Normal'),
+                ],
+              ),
+            ],
+
+            if (total == 0)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text(
+                    'Nenhum alerta para gerar relatório.',
+                    style: TextStyle(color: Colors.white38),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _cardRelatorio(
+    String label,
+    int quantidade,
+    IconData icon,
+    Color cor,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: cor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: cor.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: cor, size: 22),
+          const SizedBox(height: 6),
+          Text(
+            '$quantidade',
+            style: TextStyle(
+              color: cor,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white54, fontSize: 11),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _legendaItem(Color cor, String label) {
+    return Row(
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(color: cor, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white54, fontSize: 11),
+        ),
+      ],
+    );
+  }
+
   void _confirmarLimparAlertas(AlertaProvider provider) {
     showDialog(
       context: context,
@@ -1031,7 +1303,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ──────────────── FUNCIONÁRIOS (aba resumida) ────────────────
+  // ──────────────── FUNCIONÁRIOS ────────────────
   Widget _buildFuncionariosTab() {
     final funcionarios = context.watch<FuncionarioProvider>().funcionarios;
     final obras = context.watch<ObraProvider>().obras;
@@ -1232,9 +1504,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _perfilItem(
               Icons.person_outline_rounded,
               'Meu Perfil',
-              onTap: () {
-                _abrirEditarPerfil(context);
-              },
+              onTap: () => _abrirEditarPerfil(context),
             ),
             _perfilItem(
               Icons.notifications_none_rounded,
