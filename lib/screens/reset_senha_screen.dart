@@ -142,7 +142,7 @@ class _ResetSenhaScreenState extends State<ResetSenhaScreen> {
             const SizedBox(height: 8),
             _campoSenha(
               controller: _senhaController,
-              hint: 'Mínimo 6 caracteres',
+              hint: 'Digite sua nova senha',
               ver: _verSenha,
               onToggle: () => setState(() => _verSenha = !_verSenha),
             ),

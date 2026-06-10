@@ -19,7 +19,7 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 4,
+      version: 5,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -31,7 +31,8 @@ class DatabaseService {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nome TEXT,
         endereco TEXT,
-        responsavel TEXT
+        responsavel TEXT,
+        concluida INTEGER DEFAULT 0
       )
     ''');
 
@@ -111,6 +112,14 @@ class DatabaseService {
           dataHora TEXT NOT NULL
         )
       ''');
+    }
+
+    if (oldVersion < 5) {
+      try {
+        await db.execute(
+          'ALTER TABLE obras ADD COLUMN concluida INTEGER DEFAULT 0',
+        );
+      } catch (_) {}
     }
   }
 

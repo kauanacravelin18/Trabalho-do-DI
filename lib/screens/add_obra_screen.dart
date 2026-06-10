@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/obra_provider.dart';
+import '../providers/funcionario_provider.dart';
 
 class AddObraScreen extends StatefulWidget {
   const AddObraScreen({super.key});
@@ -12,7 +13,7 @@ class AddObraScreen extends StatefulWidget {
 class _AddObraScreenState extends State<AddObraScreen> {
   final _nomeController = TextEditingController();
   final _enderecoController = TextEditingController();
-  final _responsavelController = TextEditingController();
+  String? _responsavelId;
   bool _salvando = false;
 
   static const Color amarelo = Color(0xFFFFC107);
@@ -23,16 +24,14 @@ class _AddObraScreenState extends State<AddObraScreen> {
   void dispose() {
     _nomeController.dispose();
     _enderecoController.dispose();
-    _responsavelController.dispose();
     super.dispose();
   }
 
   Future<void> _salvar() async {
     final nome = _nomeController.text.trim();
     final endereco = _enderecoController.text.trim();
-    final responsavel = _responsavelController.text.trim();
 
-    if (nome.isEmpty || endereco.isEmpty || responsavel.isEmpty) {
+    if (nome.isEmpty || endereco.isEmpty || _responsavelId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Preencha todos os campos'),
@@ -45,11 +44,10 @@ class _AddObraScreenState extends State<AddObraScreen> {
 
     setState(() => _salvando = true);
 
-    await context.read<ObraProvider>().adicionarObra(
-      nome,
-      endereco,
-      responsavel,
-    );
+    final funcs = context.read<FuncionarioProvider>().funcionarios;
+    final nomeResp = funcs.firstWhere((f) => f.id == _responsavelId).nome;
+
+    await context.read<ObraProvider>().adicionarObra(nome, endereco, nomeResp);
 
     if (!mounted) return;
     setState(() => _salvando = false);
@@ -67,6 +65,8 @@ class _AddObraScreenState extends State<AddObraScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final funcionarios = context.watch<FuncionarioProvider>().funcionarios;
+
     return Scaffold(
       backgroundColor: fundo,
       appBar: AppBar(
@@ -137,14 +137,93 @@ class _AddObraScreenState extends State<AddObraScreen> {
 
             const SizedBox(height: 20),
 
-            // Campo responsável
+            // Dropdown responsável
             _label('Responsável'),
             const SizedBox(height: 8),
-            _campo(
-              controller: _responsavelController,
-              hint: 'Ex: Eng. Carlos Silva',
-              icon: Icons.person_rounded,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              decoration: BoxDecoration(
+                color: card,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white10),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _responsavelId,
+                  isExpanded: true,
+                  dropdownColor: const Color(0xFF252525),
+                  hint: const Text(
+                    'Selecione o responsável',
+                    style: TextStyle(color: Colors.white30),
+                  ),
+                  items: funcionarios.isEmpty
+                      ? [
+                          const DropdownMenuItem<String>(
+                            value: null,
+                            child: Text(
+                              'Nenhum funcionário cadastrado',
+                              style: TextStyle(color: Colors.white38),
+                            ),
+                          ),
+                        ]
+                      : funcionarios
+                            .map(
+                              (f) => DropdownMenuItem(
+                                value: f.id,
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.person_rounded,
+                                      color: amarelo,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            f.nome,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                          Text(
+                                            f.funcao,
+                                            style: const TextStyle(
+                                              color: Colors.white38,
+                                              fontSize: 11,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
+                            .toList(),
+                  onChanged: funcionarios.isEmpty
+                      ? null
+                      : (v) => setState(() => _responsavelId = v),
+                  icon: const Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    color: Colors.white38,
+                  ),
+                ),
+              ),
             ),
+
+            if (funcionarios.isEmpty) ...[
+              const SizedBox(height: 6),
+              const Text(
+                'Cadastre funcionários antes de criar uma obra.',
+                style: TextStyle(color: Colors.white38, fontSize: 12),
+              ),
+            ],
 
             const SizedBox(height: 40),
 
